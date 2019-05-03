@@ -40,5 +40,7 @@ defmodule LibraryApiWeb.Endpoint do
     key: "_library_api_key",
     signing_salt: "TNpacO6I"
 
+  plug CORSPlug, origins: "*"
+
   plug LibraryApiWeb.Router
 end
