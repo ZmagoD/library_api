@@ -2,6 +2,7 @@ defmodule LibraryApi.Library do
   alias LibraryApi.Repo
   alias LibraryApi.Library.Author
   alias LibraryApi.Library.Book
+  alias LibraryApi.Library.Review
   import Ecto.Query
 
   def list_authors, do: Repo.all(Author)
@@ -58,6 +59,13 @@ defmodule LibraryApi.Library do
 
   def get_book!(id), do: Repo.get!(Book, id)
 
+  def get_book_by_review!(review_id) do
+    review = get_review!(review_id)
+
+    review = Repo.preload(review, :book)
+    review.book
+  end
+
   def create_book(attrs \\ %{}) do
     %Book{}
     |> Book.changeset(attrs)
@@ -71,4 +79,34 @@ defmodule LibraryApi.Library do
   end
 
   def delete_book(%Book{} = model), do: Repo.delete(model)
+
+  #   Review
+
+  def list_reviews do
+    Repo.all(Review)
+  end
+
+  def list_reviews_for_book(book_id) do
+    Review
+    |> where([r], r.book_id == ^book_id)
+    |> Repo.all()
+  end
+
+  def get_review!(id), do: Repo.get!(Review, id)
+
+  def create_review(attrs \\ %{}) do
+    %Review{}
+    |> Review.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_review(%Review{} = review, attrs) do
+    review
+    |> Review.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_review(%Review{} = review) do
+    Repo.delete(review)
+  end
 end

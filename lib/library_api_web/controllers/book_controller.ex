@@ -23,6 +23,12 @@ defmodule LibraryApiWeb.BookController do
     render(conn, "show.json", data: book)
   end
 
+  def book_for_review(conn, %{"review_id" => review_id}) do
+    book = Library.get_book_by_review!(review_id)
+
+    render(conn, "show.json", data: book)
+  end
+
   def create(conn, %{"data" => data = %{ "type" => "books", "attributes" => _book_params }}) do
     data = JaSerializer.Params.to_attributes data
     data = Map.put data, "publish_date", Date.from_iso8601!(data["publish_date"])
