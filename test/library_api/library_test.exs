@@ -63,4 +63,67 @@ defmodule LibraryApi.LibraryTest do
       assert %Ecto.Changeset{} = Library.change_review(review)
     end
   end
+
+  describe "users" do
+    alias LibraryApi.Library.User
+
+    @valid_attrs %{email: "some email", password_hash: "some password_hash", username: "some username"}
+    @update_attrs %{email: "some updated email", password_hash: "some updated password_hash", username: "some updated username"}
+    @invalid_attrs %{email: nil, password_hash: nil, username: nil}
+
+    def user_fixture(attrs \\ %{}) do
+      {:ok, user} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Library.create_user()
+
+      user
+    end
+
+    test "list_users/0 returns all users" do
+      user = user_fixture()
+      assert Library.list_users() == [user]
+    end
+
+    test "get_user!/1 returns the user with given id" do
+      user = user_fixture()
+      assert Library.get_user!(user.id) == user
+    end
+
+    test "create_user/1 with valid data creates a user" do
+      assert {:ok, %User{} = user} = Library.create_user(@valid_attrs)
+      assert user.email == "some email"
+      assert user.password_hash == "some password_hash"
+      assert user.username == "some username"
+    end
+
+    test "create_user/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Library.create_user(@invalid_attrs)
+    end
+
+    test "update_user/2 with valid data updates the user" do
+      user = user_fixture()
+      assert {:ok, %User{} = user} = Library.update_user(user, @update_attrs)
+      assert user.email == "some updated email"
+      assert user.password_hash == "some updated password_hash"
+      assert user.username == "some updated username"
+    end
+
+    test "update_user/2 with invalid data returns error changeset" do
+      user = user_fixture()
+      assert {:error, %Ecto.Changeset{}} = Library.update_user(user, @invalid_attrs)
+      assert user == Library.get_user!(user.id)
+    end
+
+    test "delete_user/1 deletes the user" do
+      user = user_fixture()
+      assert {:ok, %User{}} = Library.delete_user(user)
+      assert_raise Ecto.NoResultsError, fn -> Library.get_user!(user.id) end
+    end
+
+    test "change_user/1 returns a user changeset" do
+      user = user_fixture()
+      assert %Ecto.Changeset{} = Library.change_user(user)
+    end
+  end
 end

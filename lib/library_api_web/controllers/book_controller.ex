@@ -52,7 +52,7 @@ defmodule LibraryApiWeb.BookController do
     with {:ok, %Book{} = book} <- Library.update_book(book, data) do
       conn
       |> render("show.json", data: book)
-    end
+     end
   end
 
   def delete(conn, %{"id" => id}) do

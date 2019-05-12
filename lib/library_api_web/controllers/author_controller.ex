@@ -15,10 +15,10 @@ defmodule LibraryApiWeb.AuthorController do
 
   def create(conn, %{"data" => data = %{ "type" => "authors", "attributes" => author_params }}) do
     with {:ok, %Author{} = author} <- Library.create_author(author_params) do
-      conn
-      |> put_status(:created)
-      |> Plug.Conn.put_resp_header("location", Routes.author_path(conn, :show, author))
-      |> render("show.json", data: author)
+        conn
+        |> put_status(:created)
+        |> Plug.Conn.put_resp_header("location", Routes.author_path(conn, :show, author))
+        |> render("show.json", data: author)
     end
   end
 

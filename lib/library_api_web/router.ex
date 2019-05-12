@@ -10,6 +10,9 @@ defmodule LibraryApiWeb.Router do
   scope "/", LibraryApiWeb do
     pipe_through :api
     get "/", StatusController, :index
+    post "/users", UserController, :create
+    post "/session", SessionController, :create
+
     resources "/authors", AuthorController, except: [:new, :edit]
     resources "/books", BookController, except: [:new, :edit]
     resources "/reviews", ReviewController, except: [:new, :edit]

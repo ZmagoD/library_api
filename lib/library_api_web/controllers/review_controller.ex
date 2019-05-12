@@ -23,10 +23,10 @@ defmodule LibraryApiWeb.ReviewController do
     data = JaSerializer.Params.to_attributes data
 
     with {:ok, %Review{} = review} <- Library.create_review(data) do
-      conn
-      |> put_status(:created)
-      |> Plug.Conn.put_resp_header("location", Routes.review_path(conn, :show, review))
-      |> render("show.json", data: review)
+        conn
+        |> put_status(:created)
+        |> Plug.Conn.put_resp_header("location", Routes.review_path(conn, :show, review))
+        |> render("show.json", data: review)
     end
   end
 
