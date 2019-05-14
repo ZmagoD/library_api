@@ -17,8 +17,11 @@ defmodule LibraryApiWeb.ErrorView do
   end
 
   def render("500.json", assigns) do
-    IO.inspect assigns
+    %{title: "Internal server error", status: 500}
+    |> JaSerializer.ErrorSerializer.format()
+  end
 
+  def render("500.json-api", assigns) do
     %{title: "Internal server error", status: 500}
     |> JaSerializer.ErrorSerializer.format()
   end

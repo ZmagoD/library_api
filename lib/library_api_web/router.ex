@@ -12,6 +12,7 @@ defmodule LibraryApiWeb.Router do
     get "/", StatusController, :index
     post "/users", UserController, :create
     post "/session", SessionController, :create
+    get "/users/me", UserController, :show_current
 
     resources "/authors", AuthorController, except: [:new, :edit]
     resources "/books", BookController, except: [:new, :edit]

@@ -6,9 +6,7 @@ defmodule LibraryApiWeb.SessionView do
 
     jwt = %{data: data, sub: user.id}
     |> Joken.token
-    |> Joken.signer(Joken.hs512(Application.get_env(:library_api, :jwt_secret)))
-    |> Joken.sign
-
+    |> Joken.sign(Joken.Signer.create("HS512", Application.get_env(:library_api, :jwt_secret)))
     %{token: jwt.token}
   end
 end
