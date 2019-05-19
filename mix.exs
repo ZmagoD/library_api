@@ -45,7 +45,7 @@ defmodule LibraryApi.MixProject do
       {:ja_serializer, "~> 0.14.1"},
       {:comeonin, "~> 4.0"},
       {:bcrypt_elixir, "~> 1.0"},
-      {:joken, "~> 1.5.0"}
+      {:joken, "~> 2.0.0"}
     ]
   end
 

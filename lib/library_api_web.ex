@@ -31,10 +31,11 @@ defmodule LibraryApiWeb do
         try do
           ["Bearer " <> token] = get_req_header(conn, "authorization")
 
+          signer =  Joken.Signer.create("HS512", Application.get_env(:library_api, :jwt_secret))
+          # |> Joken.token
+          # > Joken.with_signer(Joken.hs512(Application.get_env(:library_api, :jwt_secret)))
           verified_token = token
-                           |> Joken.token
-                           |> Joken.with_signer(Joken.hs512(Application.get_env(:library_api, :jwt_secret)))
-                           |> Joken.verify
+                           |> Joken.Signer.verify(signer)
 
           %{ "sub" => user_id } = verified_token.claims
 
