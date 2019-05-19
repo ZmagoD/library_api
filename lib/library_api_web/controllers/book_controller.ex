@@ -3,6 +3,8 @@ defmodule LibraryApiWeb.BookController do
   alias LibraryApi.Library
   alias LibraryApi.Library.Book
 
+  plug :authenticate_user when action in [:create, :update, :delete]
+
   def index(conn, %{"filter" => %{ "query" => search_term }}) do
     books = Library.search_books(search_term)
     render(conn, "index.json", data: books)
@@ -29,19 +31,28 @@ defmodule LibraryApiWeb.BookController do
     render(conn, "show.json", data: book)
   end
 
-  def create(conn, %{"data" => data = %{ "type" => "books", "attributes" => _book_params }}) do
-    data = JaSerializer.Params.to_attributes data
-    data = Map.put data, "publish_date", Date.from_iso8601!(data["publish_date"])
+  def create(conn, %{:current_user => user, "data" => data = %{ "type" => "books", "attributes" => _book_params }}) do
+    data = data
+    |> JaSerializer.Params.to_attributes()
 
-    with {:ok, %Book{} = book} <- Library.create_book(data) do
-      conn
-      |> put_status(:created)
-      |> Plug.Conn.put_resp_header("location", Routes.book_path(conn, :show, book))
-      |> render("show.json", data: book)
+    data = data
+    |> Map.put("publish_date", Date.from_iso8601!(data["publish_date"]))
+    |> Map.put("user_id", user.id)
+
+    case Library.create_book(data) do
+      {:ok, %Book{} = book} ->
+        conn
+        |> put_status(:created)
+        |> Plug.Conn.put_resp_header("location", Routes.book_path(conn, :show, book))
+        |> render("show.json", data: book)
+      {:error, %Ecto.Changeset{} = changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(LibraryApiWeb.ErrorView, "400.json", changeset)
     end
   end
 
-  def update(conn, %{"id" => id, "data" => data = %{ "type" => "books", "attributes" => _book_params }}) do
+  def update(conn, %{:current_user => current_user, "id" => id, "data" => data = %{ "type" => "books", "attributes" => _book_params }}) do
     book = Library.get_book!(id)
     data = JaSerializer.Params.to_attributes data
 
@@ -49,18 +60,33 @@ defmodule LibraryApiWeb.BookController do
       data = Map.put data, "publish_date", Date.from_iso8601!(data["publish_date"])
     end
 
-    with {:ok, %Book{} = book} <- Library.update_book(book, data) do
-      conn
-      |> render("show.json", data: book)
-     end
+    cond do
+      book.user_id == current_user.id ->
+        case Library.update_book(book, data) do
+          {:ok, %Book{} = book} ->
+            conn
+            |> render("show.json", data: book)
+          {:error, %Ecto.Changeset{} = changeset} ->
+            conn
+            |> put_status(:unprocessable_entity)
+            |> render(LibraryApiWeb.ErrorView, "400.json", changeset)
+        end
+      true ->
+        access_error(conn)
+    end
   end
 
-  def delete(conn, %{"id" => id}) do
+  def delete(conn, %{:current_user => current_user, "id" => id}) do
     book = Library.get_book!(id)
 
-    with {:ok, %Book{} = book} <- Library.delete_book(book) do
-      conn
-      |> send_resp(:no_content, "")
+    cond do
+      book.user_id == current_user.id ->
+        with {:ok, %Book{} = book} <- Library.delete_book(book) do
+          conn
+          |> send_resp(:no_content, "")
+        end
+      true ->
+        access_error(conn)
     end
   end
 end

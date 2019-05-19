@@ -3,12 +3,13 @@ defmodule LibraryApi.Library.Review do
   import Ecto.Changeset
   alias LibraryApi.Library.Book
   alias LibraryApi.Library.Review
+  alias LibraryApi.Library.User
 
   schema "reviews" do
     field :body, :string
-    field :user, :string
 
     belongs_to :book, Book
+    belongs_to :user, User
 
     timestamps()
   end
@@ -16,7 +17,7 @@ defmodule LibraryApi.Library.Review do
   @doc false
   def changeset(%Review{} = review, attrs) do
     review
-    |> cast(attrs, [:user, :body, :book_id])
-    |> validate_required([:user, :body, :book_id])
+    |> cast(attrs, [:body, :book_id, :user_id])
+    |> validate_required([:body, :book_id, :user_id])
   end
 end

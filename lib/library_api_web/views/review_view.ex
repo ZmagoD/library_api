@@ -3,11 +3,12 @@ defmodule LibraryApiWeb.ReviewView do
   use JaSerializer.PhoenixView
 
   location "/reviews/:id"
-  attributes [:user, :body, :created_at]
+  attributes [:username, :body, :created_at]
 
-  def attributes(reivew, conn) do
-    reivew
-    |> Map.put(:created_at, reivew.inserted_at)
+  def attributes(review, conn) do
+    review
+    |> Map.put(:username, review.user.username)
+    |> Map.put(:created_at, review.inserted_at)
     |> super(conn)
   end
 
@@ -17,5 +18,6 @@ defmodule LibraryApiWeb.ReviewView do
           links: [
             related: "/reviews/:id/book"
           ]
+
 
 end

@@ -3,6 +3,8 @@ defmodule LibraryApiWeb.ReviewController do
   alias LibraryApi.Library
   alias LibraryApi.Library.Review
 
+  plug :authenticate_user when action in [:create, :update, :delete]
+
   def index(conn, _params) do
     reviews = Library.list_reviews()
     render(conn, "index.json", data: reviews)
@@ -19,33 +21,55 @@ defmodule LibraryApiWeb.ReviewController do
     render(conn, "show.json", data: review)
   end
 
-  def create(conn, %{"data" => data = %{ "type" => "reviews", "attributes" => _review_params }}) do
-    data = JaSerializer.Params.to_attributes data
+  def create(conn, %{:current_user => user, "data" => data = %{ "type" => "reviews", "attributes" => _review_params }}) do
+    data = data
+    |> JaSerializer.Params.to_attributes()
+    |> Map.put("user_id", user.id)
 
-    with {:ok, %Review{} = review} <- Library.create_review(data) do
+    case Library.create_review(data) do
+      {:ok, %Review{} = review} ->
         conn
         |> put_status(:created)
         |> Plug.Conn.put_resp_header("location", Routes.review_path(conn, :show, review))
         |> render("show.json", data: review)
+      {:error, %Ecto.Changeset{} = changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(LibraryApiWeb.ErrorView, "400.json", changeset)
     end
   end
 
-  def update(conn, %{"id" => id, "data" => data = %{ "type" => "reviews", "attributes" => _review_params }}) do
+  def update(conn, %{:current_user => current_user, "id" => id, "data" => data = %{ "type" => "reviews", "attributes" => _review_params }}) do
     review = Library.get_review!(id)
     data = JaSerializer.Params.to_attributes data
 
-    with {:ok, %Review{} = review} <- Library.update_review(review, data) do
-      conn
-      |> render("show.json", data: review)
+    cond do
+      review.user_id == current_user.id ->
+        case Library.update_review(review, data) do
+          {:ok, %Review{} = review} ->
+            conn
+            |> render("show.json", data: review)
+          {:error, %Ecto.Changeset{} = changeset} ->
+            conn
+            |> put_status(:unprocessable_entity)
+            |> render(LibraryApiWeb.ErrorView, "400.json", changeset)
+        end
+      true ->
+        access_error(conn)
     end
   end
 
-  def delete(conn, %{"id" => id}) do
+  def delete(conn, %{:current_user => current_user, "id" => id}) do
     review = Library.get_review!(id)
 
-    with {:ok, %Review{} = review} <- Library.delete_review(review) do
-      conn
-      |> send_resp(:no_content, "")
+    cond do
+      review.user_id == current_user.id ->
+        with {:ok, %Review{} = review} <- Library.delete_review(review) do
+          conn
+          |> send_resp(:no_content, "")
+        end
+      true ->
+        access_error(conn)
     end
   end
 end

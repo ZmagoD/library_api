@@ -5,6 +5,7 @@ defmodule LibraryApi.Library.Book do
   alias LibraryApi.Library.Author
   alias LibraryApi.Library.Book
   alias LibraryApi.Library.Review
+  alias LibraryApi.Library.User
 
   schema "books" do
     field :title, :string
@@ -13,10 +14,11 @@ defmodule LibraryApi.Library.Book do
 
     belongs_to :author, Author
     has_many :reviews, Review
+    belongs_to :user, User
     timestamps()
   end
 
-  @required_fields [:title, :ibsn, :publish_date, :author_id]
+  @required_fields [:title, :ibsn, :publish_date, :author_id, :user_id]
 
   def changeset(%Book{} = model, attrs) do
     model

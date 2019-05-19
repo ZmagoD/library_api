@@ -27,17 +27,18 @@ defmodule LibraryApiWeb do
 
       alias LibraryApi.Library
 
+      def access_error(conn) do
+        conn
+        |> put_status(:forbidden)
+        |> render(LibraryApiWeb.ErrorView, "403.json", %{})
+      end
+
       def authenticate_user(conn, _params) do
         try do
           ["Bearer " <> token] = get_req_header(conn, "authorization")
 
           signer =  Joken.Signer.create("HS512", Application.get_env(:library_api, :jwt_secret))
-          # |> Joken.token
-          # > Joken.with_signer(Joken.hs512(Application.get_env(:library_api, :jwt_secret)))
-          verified_token = token
-                           |> Joken.Signer.verify(signer)
-
-          %{ "sub" => user_id } = verified_token.claims
+          {:ok, %{"id" => user_id }} = Joken.Signer.verify(token, signer)
 
           user = Library.get_user!(user_id)
 
@@ -49,6 +50,7 @@ defmodule LibraryApiWeb do
         rescue
           _err ->
             conn
+            |> put_status(:unauthorized)
             |> render(LibraryApiWeb.ErrorView, "401.json", %{ detail: "User must be logged in to view this resource" })
             |> halt
         end
